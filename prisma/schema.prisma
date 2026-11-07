@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  displayName  String
+  passwordHash String
+  role         String   @default("creator") // "admin" | "creator"
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  videos       Video[]
+}
+
+model Video {
+  id               String      @id @default(uuid())
+  ownerId          String
+  owner            User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  title            String
+  topic            String
+  provider         String      @default("ollama") // "ollama" | "manual" | "groq"
+  model            String      @default("qwen2.5:3b")
+  targetSeconds    Int         @default(30)
+  voice            String      @default("af_heart")
+  scriptJson       String      // Serialized ScriptDocument
+  status           String      @default("draft") // draft, scripting, script_ready, queued, narrating, rendering, ready, failed
+  latestOutputPath String?     // e.g. "storage/videos/<id>/final.mp4"
+  durationSeconds  Float?
+  fileSizeBytes    Int?
+  errorText        String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  renderJobs       RenderJob[]
+
+  @@index([ownerId])
+  @@index([status])
+}
+
+model RenderJob {
+  id           String    @id @default(uuid())
+  videoId      String
+  video        Video     @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  status       String    @default("queued") // queued, narrating, rendering, ready, failed
+  attempts     Int       @default(0)
+  logText      String?
+  errorMessage String?
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([videoId])
+  @@index([status])
+}
+

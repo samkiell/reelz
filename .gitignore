@@ -1,0 +1,16 @@
+node_modules
+.next
+out
+dev.db
+dev.db-journal
+*.db
+*.db-journal
+storage/reelz.db*
+storage/videos/*
+!storage/videos/.gitkeep
+storage/cache/*
+.env
+.env.local
+*.log
+*.tsbuildinfo
+
